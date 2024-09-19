@@ -2,6 +2,11 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QWidget>
+#include <QTimer>
+#include <QResizeEvent>
+
+#include <paintscene.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -19,5 +24,14 @@ public:
 
 private:
     Ui::MainWindow *ui;
+    QTimer *timer;
+
+    PaintScene *scene;
+
+private:
+    void resizeEvent(QResizeEvent *event);
+
+private slots:
+    void slotTimer();
 };
 #endif // MAINWINDOW_H
