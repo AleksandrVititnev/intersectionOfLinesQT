@@ -40,17 +40,12 @@ void PaintScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
 
     if (event->button() == Qt::LeftButton) {
-
-        drawItem(event->scenePos());
+        removeItemSafely(item_1);
+        item_1 = drawItem(event->scenePos(), QPen(Qt::red, 10, Qt::SolidLine, Qt::RoundCap));
     }
     else if (event->button() == Qt::RightButton) {
-
         removeItemSafely(item_2);
-        item_2 = addLine(previousPoint.x(),
-                         previousPoint.y(),
-                         event->scenePos().x(),
-                         event->scenePos().y(),
-                         QPen(Qt::blue, 10, Qt::SolidLine, Qt::RoundCap));
+        item_2 = drawItem(event->scenePos(), QPen(Qt::blue, 10, Qt::SolidLine, Qt::RoundCap));
     }
 
     this->update();
@@ -67,29 +62,31 @@ void PaintScene::removeItemSafely(QGraphicsItem *_item)
     return;
 }
 
-void PaintScene::drawItem(QPointF point)
+QGraphicsItem *PaintScene::drawItem(QPointF point, QPen pen)
 {
+    QGraphicsItem *drewItem = nullptr;
     removeItemSafely(item_3);
 
     if (type == ItemTypes::Line) {
-        drawLine(&point);
+        drewItem = drawLine(&point, &pen);
     }
     else if (type == ItemTypes::Ray) {
-        drawRay(&point);
+        drewItem = drawRay(&point, &pen);
     }
     else if (type == ItemTypes::Section) {
-        drawSection(&point);
+        drewItem = drawSection(&point, &pen);
     }
+
+    return drewItem;
 }
 
-void PaintScene::drawLine(QPointF *point)
+QGraphicsItem *PaintScene::drawLine(QPointF *point, QPen *pen)
 {
-
+    return nullptr;
 }
 
-void PaintScene::drawRay(QPointF *pointStart)
+QGraphicsItem *PaintScene::drawRay(QPointF *pointStart, QPen *pen)
 {
-    removeItemSafely(item_1);
     QLineF lineStart = QLine(previousPoint.x(),
                         previousPoint.y(),
                         pointStart->x(),
@@ -108,19 +105,18 @@ void PaintScene::drawRay(QPointF *pointStart)
 
     QLineF line = QLineF(line1.p1(), line2.p2());
 
-    item_1 = this->addLine(line);
-
+    return this->addLine(line, *pen);
 }
 
-void PaintScene::drawSection(QPointF *point)
+QGraphicsItem *PaintScene::drawSection(QPointF *point, QPen *pen)
 {
     removeItemSafely(item_3);
     removeItemSafely(item_1);
-    item_1 = addLine(previousPoint.x(),
+    return addLine(previousPoint.x(),
                      previousPoint.y(),
                      point->x(),
                      point->y(),
-                     QPen(Qt::red, 10, Qt::SolidLine, Qt::RoundCap));
+                     *pen);
 }
 
 void PaintScene::setTypeItem(ItemTypes selectedType)

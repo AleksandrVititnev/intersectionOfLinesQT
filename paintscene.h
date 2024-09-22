@@ -33,10 +33,10 @@ private:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
     void removeItemSafely(QGraphicsItem *_item);
-    void drawItem(QPointF point);
-    void drawLine(QPointF *point);
-    void drawRay(QPointF *pointStart);
-    void drawSection(QPointF *point);
+    QGraphicsItem *drawItem(QPointF point, QPen pen);
+    QGraphicsItem *drawLine(QPointF *point, QPen *pen);
+    QGraphicsItem *drawRay(QPointF *pointStart, QPen *pen);
+    QGraphicsItem *drawSection(QPointF *point, QPen *pen);
 };
 
 #endif // PAINTSCENE_H
