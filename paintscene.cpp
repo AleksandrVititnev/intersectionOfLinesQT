@@ -82,6 +82,49 @@ QGraphicsItem *PaintScene::drawItem(QPointF point, QPen pen)
 
 QGraphicsItem *PaintScene::drawLine(QPointF *point, QPen *pen)
 {
+    // Получаем размер сцены (или GraphicsView)
+    QRectF sceneRect = this->sceneRect();
+
+    // Координаты границ сцены
+    qreal left = sceneRect.left();
+    qreal right = sceneRect.right();
+    qreal top = sceneRect.top();
+    qreal bottom = sceneRect.bottom();
+
+    // Вычисляем коэффициенты уравнения прямой: y = mx + b
+    qreal m = (point->y() - previousPoint.y()) / (point->x() - previousPoint.x());  // Угловой коэффициент (наклон)
+    qreal b = point->y() - m * point->x();                    // Свободный член
+
+    // Пересечения прямой с границами сцены
+    // Левый край (x = left)
+    QPointF leftPoint(left, m * left + b);
+
+    // Правый край (x = right)
+    QPointF rightPoint(right, m * right + b);
+
+    // Верхний край (y = top), находим x для y = top
+    QPointF topPoint((top - b) / m, top);
+
+    // Нижний край (y = bottom), находим x для y = bottom
+    QPointF bottomPoint((bottom - b) / m, bottom);
+
+    // Список точек, которые находятся внутри видимой области сцены
+    QList<QPointF> points;
+
+    // Проверяем, пересекает ли точка левую или правую границу
+    if (leftPoint.y() >= top && leftPoint.y() <= bottom) points.append(leftPoint);
+    if (rightPoint.y() >= top && rightPoint.y() <= bottom) points.append(rightPoint);
+
+    // Проверяем, пересекает ли точка верхнюю или нижнюю границу
+    if (topPoint.x() >= left && topPoint.x() <= right) points.append(topPoint);
+    if (bottomPoint.x() >= left && bottomPoint.x() <= right) points.append(bottomPoint);
+
+    // Если нашлись две точки пересечения, добавляем линию
+    if (points.size() == 2) {
+        // Создаем линию от одной точки пересечения до другой
+        return this->addLine(QLineF(points[0], points[1]), *pen);
+    }
+
     return nullptr;
 }
 
@@ -110,8 +153,6 @@ QGraphicsItem *PaintScene::drawRay(QPointF *pointStart, QPen *pen)
 
 QGraphicsItem *PaintScene::drawSection(QPointF *point, QPen *pen)
 {
-    removeItemSafely(item_3);
-    removeItemSafely(item_1);
     return addLine(previousPoint.x(),
                      previousPoint.y(),
                      point->x(),
@@ -125,4 +166,3 @@ void PaintScene::setTypeItem(ItemTypes selectedType)
 
     return;
 }
-
