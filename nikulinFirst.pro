@@ -15,6 +15,7 @@ SOURCES += \
     paintscene.cpp
 
 HEADERS += \
+    enums.h \
     items.h \
     mainwindow.h \
     paintscene.h

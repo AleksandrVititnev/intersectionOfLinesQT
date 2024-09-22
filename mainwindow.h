@@ -7,6 +7,7 @@
 #include <QResizeEvent>
 
 #include <paintscene.h>
+#include <enums.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -33,5 +34,8 @@ private:
 
 private slots:
     void slotTimer();
+    void on_drawLine_clicked();
+    void on_drawRay_clicked();
+    void on_drawSection_clicked();
 };
 #endif // MAINWINDOW_H

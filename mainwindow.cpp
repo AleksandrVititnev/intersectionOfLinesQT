@@ -24,12 +24,40 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 {
     timer->start(100);
     QWidget::resizeEvent(event);
+
+    return;
 }
 
 void MainWindow::slotTimer()
 {
     timer->stop();
     scene->setSceneRect(0, 0, ui->graphicsView->width() - 20, ui->graphicsView->height() - 20);
+
+    return;
 }
 
+
+
+void MainWindow::on_drawLine_clicked()
+{
+    scene->setTypeItem(ItemTypes::Line);
+
+    return;
+}
+
+
+void MainWindow::on_drawRay_clicked()
+{
+    scene->setTypeItem(ItemTypes::Ray);
+
+    return;
+}
+
+
+void MainWindow::on_drawSection_clicked()
+{
+    scene->setTypeItem(ItemTypes::Section);
+
+    return;
+}
 
