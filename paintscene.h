@@ -8,6 +8,8 @@
 #include <QDebug>
 
 #include <enums.h>
+#include <items.h>
+#include <matrix.h>
 
 class PaintScene : public QGraphicsScene
 {
@@ -23,20 +25,23 @@ private:
     QGraphicsItemGroup *object_1;
     QGraphicsItemGroup *object_2;
     QGraphicsItem *item_1 = nullptr;
-    QGraphicsItem *item_2 = nullptr;
-    QGraphicsItem *item_3 = nullptr;
+    Items *item_2 = nullptr;
+    Items *item_3 = nullptr;
     ItemTypes type;
 
 private:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-
     void removeItemSafely(QGraphicsItem *_item);
+
     QGraphicsItem *drawItem(QPointF point, QPen pen);
     QGraphicsItem *drawLine(QPointF *point, QPen *pen);
     QGraphicsItem *drawRay(QPointF *pointStart, QPen *pen);
     QGraphicsItem *drawSection(QPointF *point, QPen *pen);
+
+    bool isLinesIntersect();
+    QSMatrix pointToMatrix(QPointF point);
 };
 
 #endif // PAINTSCENE_H

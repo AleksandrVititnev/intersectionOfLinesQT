@@ -12,12 +12,14 @@ SOURCES += \
     items.cpp \
     main.cpp \
     mainwindow.cpp \
+    matrix.cpp \
     paintscene.cpp
 
 HEADERS += \
     enums.h \
     items.h \
     mainwindow.h \
+    matrix.h \
     paintscene.h
 
 FORMS += \
