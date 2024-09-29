@@ -6,6 +6,7 @@
 #include <QGraphicsItemGroup>
 #include <QTimer>
 #include <QDebug>
+#include <QTextBrowser>
 
 #include <enums.h>
 #include <items.h>
@@ -15,7 +16,7 @@ class PaintScene : public QGraphicsScene
 {
     Q_OBJECT
 public:
-    explicit PaintScene(QObject *parent = nullptr);
+    explicit PaintScene(QTextBrowser *_text, QObject *parent = nullptr);
     ~PaintScene();
 
     void setTypeItem(ItemTypes selectedType);
@@ -25,6 +26,7 @@ private:
     QGraphicsItemGroup *object_1;
     QGraphicsItemGroup *object_2;
     QGraphicsItem *item_1 = nullptr;
+    QTextBrowser *textResult;
     Items *item_2 = nullptr;
     Items *item_3 = nullptr;
     ItemTypes type;
@@ -40,7 +42,7 @@ private:
     QGraphicsItem *drawRay(QPointF *pointStart, QPen *pen);
     QGraphicsItem *drawSection(QPointF *point, QPen *pen);
 
-    bool isLinesIntersect();
+    std::pair<bool, QPointF> linesIntersect();
     QSMatrix pointToMatrix(QPointF point);
 };
 

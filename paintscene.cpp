@@ -1,10 +1,11 @@
 #include "paintscene.h"
 
-PaintScene::PaintScene(QObject *parent)
+PaintScene::PaintScene(QTextBrowser *_text, QObject *parent)
     : QGraphicsScene{parent}
 {
     item_2 = new Items();
     item_3 = new Items();
+    textResult = _text;
 }
 
 PaintScene::~PaintScene()
@@ -42,6 +43,7 @@ void PaintScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
 
     QPointF currentPos = event->scenePos();
+    QString text;
 
     if (event->button() == Qt::LeftButton) {
 
@@ -50,7 +52,7 @@ void PaintScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         item_2->setSecondPoint(currentPos);
 
         removeItemSafely(item_2->getItem());
-        item_2->setItem(drawItem(currentPos, QPen(Qt::red, 10, Qt::SolidLine, Qt::RoundCap)));
+        item_2->setItem(drawItem(currentPos, QPen(Qt::red, 5, Qt::SolidLine, Qt::RoundCap)));
 
     }
     else if (event->button() == Qt::RightButton) {
@@ -60,18 +62,25 @@ void PaintScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         item_3->setSecondPoint(currentPos);
 
         removeItemSafely(item_3->getItem());
-        item_3->setItem(drawItem(currentPos, QPen(Qt::blue, 10, Qt::SolidLine, Qt::RoundCap)));
+        item_3->setItem(drawItem(currentPos, QPen(Qt::blue, 5, Qt::SolidLine, Qt::RoundCap)));
 
     }
+
+    auto [isIntersect, pointIntersect] = linesIntersect();
 
     if (item_2->isOnScene()
         && item_3->isOnScene()
-        && isLinesIntersect()) {
+        && isIntersect) {
 
-        QString text = "Pereseklis!";
-        QGraphicsTextItem *textItem = this->addText(text);
-        textItem->setPos(currentPos);
+        text = "Пересекаются. Точка пересечения: x: %1, y: %2";
+        text = text.arg(pointIntersect.x()).arg(pointIntersect.y());
+        this->addEllipse(pointIntersect.x()-2.5, pointIntersect.y()-2.5, 3, 3, QPen(Qt::black, 5, Qt::SolidLine, Qt::RoundCap));
     }
+    else {
+        text = "Не пересекаются.";
+    }
+
+    textResult->setText(text);
 
     this->update();
 
@@ -190,8 +199,10 @@ QGraphicsItem *PaintScene::drawSection(QPointF *point, QPen *pen)
                      *pen);
 }
 
-bool PaintScene::isLinesIntersect()
+std::pair<bool, QPointF> PaintScene::linesIntersect()
 {
+    bool u1 = false, u2 = false, isIntersect = false;
+    QPointF pointIntersect(0, 0);
     QSMatrix a = pointToMatrix(item_2->getFirstPoint());
     QSMatrix b = pointToMatrix(item_2->getSecondPoint());
     QSMatrix c = pointToMatrix(item_3->getFirstPoint());
@@ -203,7 +214,7 @@ bool PaintScene::isLinesIntersect()
     qreal det = M.determinant();
 
     if (qAbs(det) <= qPow(10, -9)) {
-        return false;
+        return std::make_pair(false, pointIntersect);
     }
 
     QSMatrix obrM = M.getReverse();
@@ -212,17 +223,24 @@ bool PaintScene::isLinesIntersect()
     qreal t1 = T(0, 0);
     qreal t2 = T(1, 0);
 
-    bool u1 =
+    u1 =
         item_2->getType() == ItemTypes::Line
         || (item_2->getType() == ItemTypes::Ray && t1 >= 0)
               || (item_2->getType() == ItemTypes::Section && t1 >= 0 && t1 <= 1);
 
-    bool u2 =
+    u2 =
         item_3->getType() == ItemTypes::Line
         || (item_3->getType() == ItemTypes::Ray && t2 >= 0)
         || (item_3->getType() == ItemTypes::Section && t2 >= 0 && t2 <= 1);
 
-    return u1 && u2;
+    isIntersect = u1 && u2;
+
+    QSMatrix matrixIntersect = a + V * t1;
+
+    pointIntersect.setX(matrixIntersect(0, 0));
+    pointIntersect.setY(matrixIntersect(1, 0));
+
+    return std::make_pair(isIntersect, pointIntersect);
 }
 
 QSMatrix PaintScene::pointToMatrix(QPointF point)

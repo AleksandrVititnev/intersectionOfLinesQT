@@ -7,12 +7,13 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    scene = new PaintScene();
+    scene = new PaintScene(ui->textResult);
     ui->graphicsView->setScene(scene);
 
     timer = new QTimer();
     connect(timer, &QTimer::timeout, this, &MainWindow::slotTimer);
     timer->start(100);
+
 }
 
 MainWindow::~MainWindow()
