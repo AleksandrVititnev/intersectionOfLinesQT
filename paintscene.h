@@ -20,6 +20,7 @@ public:
     ~PaintScene();
 
     void setTypeItem(ItemTypes selectedType);
+    void drawGrid(qreal gridSize);
 
 private:
     QPointF previousPoint;
@@ -30,17 +31,21 @@ private:
     Items *item_2 = nullptr;
     Items *item_3 = nullptr;
     ItemTypes type;
+    bool editLinesMode = false;
+    int nowEditLine = 0;
 
 private:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
     void removeItemSafely(QGraphicsItem *_item);
+    void correctCoords(QPointF *point);
 
-    QGraphicsItem *drawItem(QPointF point, QPen pen);
-    QGraphicsItem *drawLine(QPointF *point, QPen *pen);
-    QGraphicsItem *drawRay(QPointF *pointStart, QPen *pen);
-    QGraphicsItem *drawSection(QPointF *point, QPen *pen);
+    QGraphicsItem *drawItem(Items *item, QPen pen);
+    QGraphicsItem *drawLine(QPointF pointFirst, QPointF pointSecond, QPen *pen);
+    QGraphicsItem *drawRay(QPointF pointFirst, QPointF pointSecond, QPen *pen);
+    QGraphicsItem *drawSection(QPointF pointFirst, QPointF pointSecond, QPen *pen);
+    bool isPointInClass(Items *line, const QPointF& checkPoint);
 
     std::pair<bool, QPointF> linesIntersect();
     QSMatrix pointToMatrix(QPointF point);

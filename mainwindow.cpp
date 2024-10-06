@@ -33,6 +33,7 @@ void MainWindow::slotTimer()
 {
     timer->stop();
     scene->setSceneRect(0, 0, ui->graphicsView->width() - 20, ui->graphicsView->height() - 20);
+    scene->drawGrid(50);
 
     return;
 }
