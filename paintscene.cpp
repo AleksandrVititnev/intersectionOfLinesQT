@@ -156,6 +156,7 @@ void PaintScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
                 QPen(Qt::green, 1), QBrush(Qt::green));
     }
     else {
+        removeItemSafely(itemPointIntersect);
         text = "Не пересекаются.";
     }
 
