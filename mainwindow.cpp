@@ -14,6 +14,13 @@ MainWindow::MainWindow(QWidget *parent)
     connect(timer, &QTimer::timeout, this, &MainWindow::slotTimer);
     timer->start(100);
 
+    QButtonGroup *buttonGroup = new QButtonGroup(this);
+
+    buttonGroup->addButton(ui->drawLine);
+    buttonGroup->addButton(ui->drawRay);
+    buttonGroup->addButton(ui->drawSection);
+
+    buttonGroup->setExclusive(true);
 }
 
 MainWindow::~MainWindow()
@@ -34,6 +41,7 @@ void MainWindow::slotTimer()
     timer->stop();
     scene->setSceneRect(0, 0, ui->graphicsView->width() - 20, ui->graphicsView->height() - 20);
     scene->drawGrid(50);
+    scene->reCalcMiddleScreen();
 
     return;
 }

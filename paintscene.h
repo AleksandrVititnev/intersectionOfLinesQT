@@ -21,16 +21,19 @@ public:
 
     void setTypeItem(ItemTypes selectedType);
     void drawGrid(qreal gridSize);
+    void reCalcMiddleScreen();
 
 private:
     QPointF previousPoint;
+    QPointF middleScreen;
+    QGraphicsItem *itemPointIntersect = nullptr;
     QGraphicsItemGroup *object_1;
     QGraphicsItemGroup *object_2;
     QGraphicsItem *item_1 = nullptr;
     QTextBrowser *textResult;
     Items *item_2 = nullptr;
     Items *item_3 = nullptr;
-    ItemTypes type;
+    ItemTypes type = ItemTypes::None;
     bool editLinesMode = false;
     int nowEditLine = 0;
 
@@ -40,12 +43,16 @@ private:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
     void removeItemSafely(QGraphicsItem *_item);
     void correctCoords(QPointF *point);
+    void removeItemPoints(QVector<QGraphicsItem*> *points);
+    void addItemPoints(Items *item);
 
-    QGraphicsItem *drawItem(Items *item, QPen pen);
+    QGraphicsItem *drawItem(QPointF pointFirst, QPointF pointSecond, ItemTypes _type, QPen pen);
     QGraphicsItem *drawLine(QPointF pointFirst, QPointF pointSecond, QPen *pen);
     QGraphicsItem *drawRay(QPointF pointFirst, QPointF pointSecond, QPen *pen);
     QGraphicsItem *drawSection(QPointF pointFirst, QPointF pointSecond, QPen *pen);
     bool isPointInClass(Items *line, const QPointF& checkPoint);
+    QPointF getSceneCenter();
+    QPointF pointFromCenter(QPointF point);
 
     std::pair<bool, QPointF> linesIntersect();
     QSMatrix pointToMatrix(QPointF point);

@@ -5,6 +5,7 @@
 #include <QWidget>
 #include <QTimer>
 #include <QResizeEvent>
+#include <QButtonGroup>
 
 #include <paintscene.h>
 #include <enums.h>

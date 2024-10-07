@@ -34,6 +34,11 @@ bool Items::isOnScene()
     return (item != nullptr && item->scene());
 }
 
+QVector<QGraphicsItem *> *Items::getItemsPoints()
+{
+    return &points;
+}
+
 void Items::setFirstPoint(QPointF point)
 {
     first_point = point;
@@ -52,5 +57,15 @@ void Items::setItem(QGraphicsItem *_item)
 void Items::setType(ItemTypes _type)
 {
     type = _type;
+}
+
+void Items::clearItem()
+{
+    item = nullptr;
+}
+
+void Items::addItemPoint(QGraphicsItem *itemPoint)
+{
+    points.append(itemPoint);
 }
 

@@ -17,6 +17,8 @@ PaintScene::~PaintScene()
 
 void PaintScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
+    if (type == ItemTypes::None) return;
+
     previousPoint = event->scenePos();
     correctCoords(&previousPoint);
 
@@ -34,6 +36,8 @@ void PaintScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void PaintScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
+    if (type == ItemTypes::None) return;
+
     if (event->buttons() == Qt::MouseButton::LeftButton
         || event->buttons() == Qt::MouseButton::RightButton) {
 
@@ -43,18 +47,16 @@ void PaintScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         if (editLinesMode) {
             removeItemSafely(item_1);
             if (isPointInClass(item_2, previousPoint)) {
-                item_1 = addLine(currentPos.x(),
-                                 currentPos.y(),
-                                 item_2->getSecondPoint().x(),
-                                 item_2->getSecondPoint().y(),
-                                 QPen(Qt::green, 10, Qt::SolidLine, Qt::RoundCap));
+                if (previousPoint == item_2->getFirstPoint())
+                    item_1 = drawItem(currentPos, item_2->getSecondPoint(), item_2->getType(), QPen(Qt::green, 5, Qt::SolidLine, Qt::RoundCap));
+                else if (previousPoint == item_2->getSecondPoint())
+                    item_1 = drawItem(item_2->getFirstPoint(), currentPos, item_2->getType(), QPen(Qt::green, 5, Qt::SolidLine, Qt::RoundCap));
             }
             else if (isPointInClass(item_3, previousPoint)) {
-                item_1 = addLine(currentPos.x(),
-                                 currentPos.y(),
-                                 item_3->getSecondPoint().x(),
-                                 item_3->getSecondPoint().y(),
-                                 QPen(Qt::green, 10, Qt::SolidLine, Qt::RoundCap));
+                if (previousPoint == item_3->getFirstPoint())
+                    item_1 = drawItem(currentPos, item_3->getSecondPoint(), item_3->getType(), QPen(Qt::green, 5, Qt::SolidLine, Qt::RoundCap));
+                else if (previousPoint == item_3->getSecondPoint())
+                    item_1 = drawItem(item_3->getFirstPoint(), currentPos, item_3->getType(), QPen(Qt::green, 5, Qt::SolidLine, Qt::RoundCap));
             }
         }
         else {
@@ -75,23 +77,36 @@ void PaintScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
 void PaintScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
+    if (type == ItemTypes::None) return;
 
     QPointF currentPos = event->scenePos();
+    QPointF pointIntersectCenter;
     QString text;
 
     correctCoords(&currentPos);
 
     if (editLinesMode) {
-
         if (isPointInClass(item_2, previousPoint)) {
-            item_2->setFirstPoint(currentPos);
+            if (previousPoint == item_2->getFirstPoint())
+                item_2->setFirstPoint(currentPos);
+            else if (previousPoint == item_2->getSecondPoint())
+                item_2->setSecondPoint(currentPos);
+
             removeItemSafely(item_2->getItem());
-            item_2->setItem(drawItem(item_2, QPen(Qt::red, 5, Qt::SolidLine, Qt::RoundCap)));
+            removeItemPoints(item_2->getItemsPoints());
+            item_2->setItem(drawItem(item_2->getFirstPoint(), item_2->getSecondPoint(), item_2->getType(), QPen(Qt::red, 5, Qt::SolidLine, Qt::RoundCap)));
+            addItemPoints(item_2);
         }
         else if (isPointInClass(item_3, previousPoint)) {
-            item_3->setFirstPoint(currentPos);
+            if (previousPoint == item_3->getFirstPoint())
+                item_3->setFirstPoint(currentPos);
+            else if (previousPoint == item_3->getSecondPoint())
+                item_3->setSecondPoint(currentPos);
+
             removeItemSafely(item_3->getItem());
-            item_3->setItem(drawItem(item_3, QPen(Qt::blue, 5, Qt::SolidLine, Qt::RoundCap)));
+            removeItemPoints(item_3->getItemsPoints());
+            item_3->setItem(drawItem(item_3->getFirstPoint(), item_3->getSecondPoint(), item_3->getType(), QPen(Qt::blue, 5, Qt::SolidLine, Qt::RoundCap)));
+            addItemPoints(item_3);
         }
 
     }
@@ -104,8 +119,9 @@ void PaintScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             item_2->setSecondPoint(currentPos);
 
             removeItemSafely(item_2->getItem());
-            item_2->setItem(drawItem(item_2, QPen(Qt::red, 5, Qt::SolidLine, Qt::RoundCap)));
-
+            removeItemPoints(item_2->getItemsPoints());
+            item_2->setItem(drawItem(item_2->getFirstPoint(), item_2->getSecondPoint(), item_2->getType(), QPen(Qt::red, 5, Qt::SolidLine, Qt::RoundCap)));
+            addItemPoints(item_2);
         }
         else if (event->button() == Qt::RightButton) {
 
@@ -114,8 +130,9 @@ void PaintScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             item_3->setSecondPoint(currentPos);
 
             removeItemSafely(item_3->getItem());
-            item_3->setItem(drawItem(item_3, QPen(Qt::blue, 5, Qt::SolidLine, Qt::RoundCap)));
-
+            removeItemPoints(item_3->getItemsPoints());
+            item_3->setItem(drawItem(item_3->getFirstPoint(), item_3->getSecondPoint(), item_3->getType(), QPen(Qt::blue, 5, Qt::SolidLine, Qt::RoundCap)));
+            addItemPoints(item_3);
         }
     }
 
@@ -125,9 +142,18 @@ void PaintScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         && item_3->isOnScene()
         && isIntersect) {
 
-        text = "Пересекаются. Точка пересечения: x: %1, y: %2";
-        text = text.arg(pointIntersect.x() / 50.).arg(pointIntersect.y() / 50.);
-        this->addEllipse(pointIntersect.x()-2.5, pointIntersect.y()-2.5, 3, 3, QPen(Qt::black, 5, Qt::SolidLine, Qt::RoundCap));
+        removeItemSafely(itemPointIntersect);
+
+        pointIntersectCenter = pointFromCenter(pointIntersect);
+
+        text = "Пересекаются. Точка пересечения: \nx: %1, y: %2";
+        text = text.arg(QString::number(pointIntersectCenter.x(), 'f', 1))
+                   .arg(QString::number(pointIntersectCenter.y(), 'f', 1));
+
+        itemPointIntersect = this->addEllipse(
+                qRound(pointIntersect.x()) - 10,
+                qRound(pointIntersect.y()) - 10, 20, 20,
+                QPen(Qt::green, 1), QBrush(Qt::green));
     }
     else {
         text = "Не пересекаются.";
@@ -146,6 +172,8 @@ void PaintScene::removeItemSafely(QGraphicsItem *_item)
         this->removeItem(_item);
     }
 
+    _item = nullptr;
+
     return;
 }
 
@@ -154,33 +182,52 @@ void PaintScene::drawGrid(qreal gridSize)
     // Получаем размеры сцены
     QRectF sceneRect = this->sceneRect();
 
+    // Получаем середину сцены
+    qreal centerX = sceneRect.left() + sceneRect.width() / 2;
+    qreal centerY = sceneRect.top() + sceneRect.height() / 2;
+
+    centerX = qRound(centerX / 50.) * 50;
+    centerY = qRound(centerY / 50.) * 50;
+
     // Очищаем текущую сцену перед рисованием сетки
     this->clear();
+    item_2->clearItem();
+    item_3->clearItem();
 
     // Рисуем вертикальные линии
     for (qreal x = sceneRect.left() - 50; x <= sceneRect.right() + 50; x += gridSize) {
         this->addLine(QLineF(x, sceneRect.top() - 50, x, sceneRect.bottom() + 50), QPen(Qt::gray));
     }
 
+    this->addLine(QLineF(centerX, sceneRect.top() - 50, centerX, sceneRect.bottom() + 50), QPen(Qt::black));
+
     // Рисуем горизонтальные линии
     for (qreal y = sceneRect.top() - 50; y <= sceneRect.bottom() + 50; y += gridSize) {
         this->addLine(QLineF(sceneRect.left() - 50, y, sceneRect.right() + 50, y), QPen(Qt::gray));
     }
+
+    this->addLine(QLineF(sceneRect.left() - 50, centerY, sceneRect.right() + 50, centerY), QPen(Qt::black));
 }
 
-QGraphicsItem *PaintScene::drawItem(Items *item, QPen pen)
+void PaintScene::reCalcMiddleScreen()
+{
+    middleScreen = getSceneCenter();
+    return;
+}
+
+QGraphicsItem *PaintScene::drawItem(QPointF pointFirst, QPointF pointSecond, ItemTypes _type, QPen pen)
 {
     QGraphicsItem *drewItem = nullptr;
     removeItemSafely(item_1);
 
-    if (type == ItemTypes::Line) {
-        drewItem = drawLine(item->getFirstPoint(), item->getSecondPoint(), &pen);
+    if (_type == ItemTypes::Line) {
+        drewItem = drawLine(pointFirst, pointSecond, &pen);
     }
-    else if (type == ItemTypes::Ray) {
-        drewItem = drawRay(item->getFirstPoint(), item->getSecondPoint(), &pen);
+    else if (_type == ItemTypes::Ray) {
+        drewItem = drawRay(pointFirst, pointSecond, &pen);
     }
-    else if (type == ItemTypes::Section) {
-        drewItem = drawSection(item->getFirstPoint(), item->getSecondPoint(), &pen);
+    else if (_type == ItemTypes::Section) {
+        drewItem = drawSection(pointFirst, pointSecond, &pen);
     }
 
     return drewItem;
@@ -189,61 +236,64 @@ QGraphicsItem *PaintScene::drawItem(Items *item, QPen pen)
 QGraphicsItem *PaintScene::drawLine(QPointF pointFirst, QPointF pointSecond, QPen *pen)
 {
     QLineF drewLine;
-    qreal maxLength = qSqrt(qPow(this->width(), 2) * qPow(this->height(), 2));
 
-    // Получаем размер сцены (или GraphicsView)
+    // Получаем размер сцены
     QRectF sceneRect = this->sceneRect();
 
     // Координаты границ сцены
-    qreal left = sceneRect.left();
-    qreal right = sceneRect.right();
-    qreal top = sceneRect.top();
-    qreal bottom = sceneRect.bottom();
+    qreal left = sceneRect.left() - 50;
+    qreal right = sceneRect.right() + 50;
+    qreal top = sceneRect.top() - 50;
+    qreal bottom = sceneRect.bottom() + 50;
 
     // Список точек пересечения
     QList<QPointF> points;
 
-    // Проверяем, является ли линия вертикальной
-    if (pointFirst.x() == pointSecond.x()) {
+    // Проверяем, является ли линия вертикальной (x координаты равны)
+    if (qFuzzyCompare(pointFirst.x(), pointSecond.x())) {
         // Линия вертикальная, пересекаем верхний и нижний край сцены
         points.append(QPointF(pointFirst.x(), top));     // Пересечение с верхом
         points.append(QPointF(pointFirst.x(), bottom));  // Пересечение с низом
     } else {
-        // Линия не вертикальная, вычисляем угловой коэффициент m и свободный член b
+        // Линия не вертикальная, вычисляем наклон (m) и свободный член (b)
         qreal m = (pointFirst.y() - pointSecond.y()) / (pointFirst.x() - pointSecond.x());
-        qreal b = (pointFirst.y() - m * pointFirst.x());
+        qreal b = pointFirst.y() - m * pointFirst.x();
 
-        // Пересечения прямой с границами сцены
-        // Левый край (x = left)
+        // Пересечение с левым краем (x = left)
         QPointF leftPoint(left, m * left + b);
+        if (leftPoint.y() >= top && leftPoint.y() <= bottom) {
+            points.append(leftPoint);
+        }
 
-        // Правый край (x = right)
+        // Пересечение с правым краем (x = right)
         QPointF rightPoint(right, m * right + b);
+        if (rightPoint.y() >= top && rightPoint.y() <= bottom) {
+            points.append(rightPoint);
+        }
 
-        // Верхний край (y = top), находим x для y = top
+        // Пересечение с верхним краем (y = top)
         QPointF topPoint((top - b) / m, top);
+        if (topPoint.x() >= left && topPoint.x() <= right) {
+            points.append(topPoint);
+        }
 
-        // Нижний край (y = bottom), находим x для y = bottom
+        // Пересечение с нижним краем (y = bottom)
         QPointF bottomPoint((bottom - b) / m, bottom);
-
-        // Проверяем, пересекает ли точка левую или правую границу
-        if (leftPoint.y() >= top && leftPoint.y() <= bottom) points.append(leftPoint);
-        if (rightPoint.y() >= top && rightPoint.y() <= bottom) points.append(rightPoint);
-
-        // Проверяем, пересекает ли точка верхнюю или нижнюю границу
-        if (topPoint.x() >= left && topPoint.x() <= right) points.append(topPoint);
-        if (bottomPoint.x() >= left && bottomPoint.x() <= right) points.append(bottomPoint);
+        if (bottomPoint.x() >= left && bottomPoint.x() <= right) {
+            points.append(bottomPoint);
+        }
     }
 
     // Если нашлись две точки пересечения, добавляем линию
-    if (points.size() == 2) {
-        // Создаем линию от одной точки пересечения до другой
+    if (points.size() >= 2) {
+        // Выбираем первые две точки
         drewLine = QLineF(points[0], points[1]);
-        drewLine.setLength(maxLength / 2);
+        // Добавляем линию на сцену
         return this->addLine(drewLine, *pen);
     }
 
     return nullptr;
+
 }
 
 QGraphicsItem *PaintScene::drawRay(QPointF pointFirst, QPointF pointSecond, QPen *pen)
@@ -288,6 +338,27 @@ bool PaintScene::isPointInClass(Items *line, const QPointF &checkPoint)
     return (firstPoint == checkPoint) || (secondPoint == checkPoint);
 }
 
+QPointF PaintScene::getSceneCenter()
+{
+    // Получаем размеры сцены
+    QRectF sceneRect = this->sceneRect();
+
+    // Вычисляем координаты центра
+    qreal centerX = sceneRect.left() + sceneRect.width() / 2 / 50;
+    qreal centerY = sceneRect.top() + sceneRect.height() / 2 / 50;
+
+    // Возвращаем точку с координатами середины
+    return QPointF(qRound(centerX), qRound(centerY));
+}
+
+QPointF PaintScene::pointFromCenter(QPointF point)
+{
+    qreal x = middleScreen.x() - point.x() / 50.;
+    qreal y = middleScreen.y() - point.y() / 50.;
+
+    return QPointF(-x, y);
+}
+
 void PaintScene::correctCoords(QPointF *point)
 {
     if (point == nullptr) return;
@@ -296,6 +367,37 @@ void PaintScene::correctCoords(QPointF *point)
     point->setY(25 * qRound(point->y() / 25.));
 
     return;
+}
+
+void PaintScene::removeItemPoints(QVector<QGraphicsItem *> *points)
+{
+    if (points == nullptr) return;
+
+    for (auto point : *points) {
+        this->removeItemSafely(point);
+    }
+
+    points->clear();
+}
+
+void PaintScene::addItemPoints(Items *item)
+{
+    if (item == nullptr) return;
+
+    qreal radius = 5;
+    QVector<QGraphicsItem*> *points = item->getItemsPoints();
+
+    points->append(
+        this->addEllipse(
+            item->getFirstPoint().x() - radius,
+            item->getFirstPoint().y() - radius, radius * 2, radius * 2,
+            QPen(Qt::green, 1), QBrush(Qt::black)));
+
+    points->append(
+        this->addEllipse(
+            item->getSecondPoint().x() - radius,
+            item->getSecondPoint().y() - radius, radius * 2, radius * 2,
+            QPen(Qt::green, 1), QBrush(Qt::black)));
 }
 
 std::pair<bool, QPointF> PaintScene::linesIntersect()
